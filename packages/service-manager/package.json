@@ -1,0 +1,20 @@
+{
+  "name": "@ones-panel/service-manager",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@ones-panel/database": "workspace:*",
+    "@ones-panel/shared": "workspace:*",
+    "dockerode": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/dockerode": "^3.3.0",
+    "typescript": "^5.3.0"
+  }
+}

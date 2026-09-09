@@ -1,0 +1,23 @@
+{
+  "name": "ones-panel",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Self-hosted hosting infrastructure management platform",
+  "scripts": {
+    "dev": "pnpm -r --parallel run dev",
+    "dev:api": "pnpm --filter @ones-panel/api run dev",
+    "dev:web": "pnpm --filter @ones-panel/web run dev",
+    "dev:worker": "pnpm --filter @ones-panel/worker run dev",
+    "build": "pnpm -r run build",
+    "db:generate": "pnpm --filter @ones-panel/database run generate",
+    "db:push": "pnpm --filter @ones-panel/database run push",
+    "db:migrate": "pnpm --filter @ones-panel/database run migrate",
+    "db:seed": "pnpm --filter @ones-panel/database run seed",
+    "lint": "pnpm -r run lint",
+    "clean": "pnpm -r run clean"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

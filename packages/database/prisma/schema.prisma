@@ -1,0 +1,440 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+  MODERATOR
+  VIEWER
+}
+
+enum ServiceStatus {
+  INSTALLED
+  RUNNING
+  STOPPED
+  STARTING
+  STOPPING
+  ERROR
+  RESTARTING
+  INSTALLING
+  UPDATING
+  NOT_INSTALLED
+}
+
+enum ApplicationType {
+  JTG
+  STATUS_PAGE
+  VPS_DEPLOY_BOT
+  HOSTING_OPS_BOT
+  CUSTOM
+}
+
+enum HealthStatus {
+  HEALTHY
+  WARNING
+  CRITICAL
+  UNKNOWN
+}
+
+enum AlertSeverity {
+  INFO
+  WARNING
+  ERROR
+  CRITICAL
+}
+
+enum LogLevel {
+  INFO
+  WARNING
+  ERROR
+  DEBUG
+}
+
+enum IncidentStatus {
+  INVESTIGATING
+  IDENTIFIED
+  MONITORING
+  RESOLVED
+}
+
+enum MaintenanceStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum BackupStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String    @map("password_hash")
+  name          String
+  role          UserRole  @default(VIEWER)
+  permissions   String[]
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  auditLogs     AuditLog[]
+  sessions      Session[]
+
+  @@map("users")
+}
+
+model Session {
+  id            String    @id @default(cuid())
+  userId        String    @map("user_id")
+  token         String    @unique
+  expiresAt     DateTime  @map("expires_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Branding {
+  id                  String   @id @default(cuid())
+  panelName           String   @default("ONES PANEL") @map("panel_name")
+  companyName         String   @default("") @map("company_name")
+  logoUrl             String?  @map("logo_url")
+  faviconUrl          String?  @map("favicon_url")
+  loginLogoUrl        String?  @map("login_logo_url")
+  dashboardLogoUrl    String?  @map("dashboard_logo_url")
+  primaryColor        String   @default("#3b82f6") @map("primary_color")
+  secondaryColor      String   @default("#1e40af") @map("secondary_color")
+  accentColor         String   @default("#60a5fa") @map("accent_color")
+  backgroundColor     String   @default("#0f172a") @map("background_color")
+  backgroundImageUrl  String?  @map("background_image_url")
+  loginBackgroundUrl  String?  @map("login_background_url")
+  loadingScreenUrl    String?  @map("loading_screen_url")
+  browserTitle        String   @default("ONES PANEL") @map("browser_title")
+  footerText          String   @default("") @map("footer_text")
+  supportUrl          String?  @map("support_url")
+  discordUrl          String?  @map("discord_url")
+  websiteUrl          String?  @map("website_url")
+  docsUrl             String?  @map("docs_url")
+  socialLinks         Json     @default("{}") @map("social_links")
+  emailBranding       Json     @default("{}") @map("email_branding")
+  notificationBranding Json   @default("{}") @map("notification_branding")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@map("branding")
+}
+
+model Setting {
+  id            String   @id @default(cuid())
+  key           String   @unique
+  value         String
+  encrypted     Boolean  @default(false)
+  category      String   @default("general")
+  description   String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+
+model Application {
+  id              String          @id @default(cuid())
+  name            String
+  type            ApplicationType
+  slug            String          @unique
+  description     String          @default("")
+  version         String          @default("0.0.0")
+  status          ServiceStatus   @default(NOT_INSTALLED)
+  config          Json            @default("{}")
+  installPath     String?         @map("install_path")
+  pid             Int?
+  cpuUsage        Float           @default(0) @map("cpu_usage")
+  ramUsage        BigInt          @default(0) @map("ram_usage")
+  diskUsage       BigInt          @default(0) @map("disk_usage")
+  networkRx       BigInt          @default(0) @map("network_rx")
+  networkTx       BigInt          @default(0) @map("network_tx")
+  installedAt     DateTime?       @map("installed_at")
+  lastStartedAt   DateTime?       @map("last_started_at")
+  lastStoppedAt   DateTime?       @map("last_stopped_at")
+  lastUpdatedAt   DateTime?       @map("last_updated_at")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  healthChecks    HealthCheck[]
+  logs            ServiceLog[]
+
+  @@map("applications")
+}
+
+model HealthCheck {
+  id            String       @id @default(cuid())
+  serviceId     String       @map("service_id")
+  status        HealthStatus
+  message       String       @default("")
+  responseTime  Int          @default(0) @map("response_time")
+  checkedAt     DateTime     @default(now()) @map("checked_at")
+
+  application   Application  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([serviceId, checkedAt])
+  @@map("health_checks")
+}
+
+model Alert {
+  id              String        @id @default(cuid())
+  title           String
+  message         String
+  severity        AlertSeverity
+  source          String
+  metadata        Json          @default("{}")
+  acknowledged    Boolean       @default(false)
+  acknowledgedAt  DateTime?     @map("acknowledged_at")
+  acknowledgedBy  String?       @map("acknowledged_by")
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  @@index([severity, createdAt])
+  @@map("alerts")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  action      String
+  resource    String
+  resourceId  String   @map("resource_id")
+  details     Json     @default("{}")
+  ipAddress   String   @map("ip_address")
+  userAgent   String   @map("user_agent")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([resource, createdAt])
+  @@map("audit_logs")
+}
+
+model ServiceLog {
+  id          String   @id @default(cuid())
+  serviceId   String   @map("service_id")
+  level       LogLevel
+  message     String
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  application  Application @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([serviceId, createdAt])
+  @@map("service_logs")
+}
+
+model Backup {
+  id          String       @id @default(cuid())
+  name        String
+  type        String
+  size        BigInt       @default(0)
+  path        String
+  status      BackupStatus @default(PENDING)
+  metadata    Json         @default("{}")
+  expiresAt   DateTime?    @map("expires_at")
+  createdAt   DateTime     @default(now()) @map("created_at")
+
+  @@map("backups")
+}
+
+model Incident {
+  id          String         @id @default(cuid())
+  title       String
+  message     String
+  status      IncidentStatus @default(INVESTIGATING)
+  serviceId   String?        @map("service_id")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+  resolvedAt  DateTime?      @map("resolved_at")
+
+  @@map("incidents")
+}
+
+model Maintenance {
+  id            String            @id @default(cuid())
+  title         String
+  message       String
+  status        MaintenanceStatus @default(SCHEDULED)
+  serviceId     String?           @map("service_id")
+  scheduledAt   DateTime          @map("scheduled_at")
+  startedAt     DateTime?         @map("started_at")
+  completedAt   DateTime?         @map("completed_at")
+  createdAt     DateTime          @default(now()) @map("created_at")
+
+  @@map("maintenance")
+}
+
+model DiscordBot {
+  id                    String   @id @default(cuid())
+  applicationId         String   @map("application_id")
+  name                  String
+  token                 String
+  guildId               String?  @map("guild_id")
+  welcomeChannelId      String?  @map("welcome_channel_id")
+  announcementChannelId String?  @map("announcement_channel_id")
+  ticketCategoryId      String?  @map("ticket_category_id")
+  enabled               Boolean  @default(false)
+  features              String[]
+  config                Json     @default("{}")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  @@map("discord_bots")
+}
+
+model Metric {
+  id          String   @id @default(cuid())
+  source      String
+  metric      String
+  value       Float
+  tags        Json     @default("{}")
+  timestamp   DateTime @default(now())
+
+  @@index([source, metric, timestamp])
+  @@map("metrics")
+}
+
+model VPSInstance {
+  id              String        @id @default(cuid())
+  name            String
+  hostname        String
+  osImage         String        @map("os_image")
+  status          String        @default("stopped")
+  memory          Int
+  cpu             Int
+  disk            Int
+  token           String        @unique
+  password        String
+  ipAddress       String?       @map("ip_address")
+  userId          String?       @map("user_id")
+  containerId     String?       @map("container_id")
+  dockerImage     String?       @map("docker_image")
+  sshPort         Int           @default(22) @map("ssh_port")
+  tmateSession    String?       @map("tmate_session")
+  restartCount    Int           @default(0) @map("restart_count")
+  suspended       Boolean       @default(false)
+  suspendedAt     DateTime?     @map("suspended_at")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@map("vps_instances")
+}
+
+model MinecraftServer {
+  id              String        @id @default(cuid())
+  name            String
+  nodeId          String?       @map("node_id")
+  software        String        @default("paper")
+  version         String        @default("1.20.4")
+  port            Int           @default(25565)
+  status          String        @default("stopped")
+  maxPlayers      Int           @default(20) @map("max_players")
+  onlinePlayers   Int           @default(0) @map("online_players")
+  cpuUsage        Float         @default(0) @map("cpu_usage")
+  ramUsage        BigInt        @default(0) @map("ram_usage")
+  ramAllocated    BigInt        @default(0) @map("ram_allocated")
+  diskUsage       BigInt        @default(0) @map("disk_usage")
+  uptime          BigInt        @default(0)
+  containerId     String?       @map("container_id")
+  applicationId   String?       @map("application_id")
+  config          Json          @default("{}")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  @@map("minecraft_servers")
+}
+
+model MinecraftNode {
+  id              String        @id @default(cuid())
+  name            String
+  host            String
+  port            Int           @default(25575)
+  token           String
+  status          String        @default("offline")
+  maxMemory       BigInt        @default(0) @map("max_memory")
+  usedMemory      BigInt        @default(0) @map("used_memory")
+  cpuCores        Int           @default(0) @map("cpu_cores")
+  serverCount     Int           @default(0) @map("server_count")
+  lastPing        DateTime?     @map("last_ping")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  @@map("minecraft_nodes")
+}
+
+model Campaign {
+  id              String        @id @default(cuid())
+  name            String
+  message         String
+  embedJson       Json?         @map("embed_json")
+  targetType      String        @default("channel") @map("target_type")
+  targetId        String?       @map("target_id")
+  scheduledAt     DateTime?     @map("scheduled_at")
+  status          String        @default("draft")
+  sentCount       Int           @default(0) @map("sent_count")
+  failedCount     Int           @default(0) @map("failed_count")
+  skippedCount    Int           @default(0) @map("skipped_count")
+  botId           String?       @map("bot_id")
+  config          Json          @default("{}")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  @@map("campaigns")
+}
+
+model TerminalSession {
+  id              String        @id @default(cuid())
+  userId          String        @map("user_id")
+  isActive        Boolean       @default(true) @map("is_active")
+  commandCount    Int           @default(0) @map("command_count")
+  lastActivityAt  DateTime      @default(now()) @map("last_activity_at")
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  @@map("terminal_sessions")
+}
+
+model DiscordAnalytics {
+  id              String        @id @default(cuid())
+  botId           String        @map("bot_id")
+  guildId         String        @map("guild_id")
+  metric          String
+  value           Float
+  metadata        Json          @default("{}")
+  recordedAt      DateTime      @default(now()) @map("recorded_at")
+
+  @@index([botId, metric, recordedAt])
+  @@map("discord_analytics")
+}
+
+model BroadcastMessage {
+  id              String        @id @default(cuid())
+  botId           String        @map("bot_id")
+  channelId       String        @map("channel_id")
+  content         String
+  embedJson       Json?         @map("embed_json")
+  status          String        @default("pending")
+  sentCount       Int           @default(0) @map("sent_count")
+  failedCount     Int           @default(0) @map("failed_count")
+  totalTargets    Int           @default(0) @map("total_targets")
+  rateLimitPerSec Int           @default(1) @map("rate_limit_per_sec")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  completedAt     DateTime?     @map("completed_at")
+
+  @@map("broadcast_messages")
+}
