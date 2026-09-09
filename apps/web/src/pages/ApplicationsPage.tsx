@@ -41,7 +41,7 @@ export function ApplicationsPage() {
     fetchApplications();
   }, []);
 
-  const handleAction = async (id: string, action: 'start' | 'stop' | 'restart' | 'install') => {
+  const handleAction = async (id: string, action: 'start' | 'stop' | 'restart' | 'install' | 'update' | 'uninstall') => {
     setActionLoading(id);
     try {
       await applicationsApi[action](id);

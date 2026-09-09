@@ -146,14 +146,14 @@ const applicationWorker = new Worker(
       });
 
       return { success: true };
-    } catch (error) {
+    } catch (err: any) {
       // Log error
       await prisma.serviceLog.create({
         data: {
           serviceId: applicationId,
           level: 'ERROR',
-          message: `Action ${action} failed: ${error.message}`,
-          metadata: { action, error: error.message, timestamp: new Date().toISOString() },
+          message: `Action ${action} failed: ${err.message}`,
+          metadata: { action, error: err.message, timestamp: new Date().toISOString() },
         },
       });
 
@@ -163,7 +163,7 @@ const applicationWorker = new Worker(
         data: { status: 'ERROR' },
       });
 
-      throw error;
+      throw err;
     }
   },
   { connection }
@@ -283,12 +283,12 @@ const healthCheckWorker = new Worker(
       }
 
       return { status: healthResult.status };
-    } catch (error) {
+    } catch (err: any) {
       await prisma.healthCheck.create({
         data: {
           serviceId: applicationId,
           status: 'CRITICAL',
-          message: `Health check failed: ${error.message}`,
+          message: `Health check failed: ${err.message}`,
           responseTime: 0,
         },
       });

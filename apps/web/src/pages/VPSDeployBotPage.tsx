@@ -269,33 +269,33 @@ export function VPSDeployBotPage() {
                   {/* Lifecycle Actions */}
                   <div className="flex flex-wrap gap-2">
                     {status?.status === 'NOT_INSTALLED' && (
-                      <Button size="sm" onClick={() => handleAction(bot.applicationId, 'install')} disabled={actionLoading === bot.id}>
+                      <Button size="sm" onClick={() => handleAction(bot.applicationId || '', 'install')} disabled={actionLoading === bot.id}>
                         <Download className="h-4 w-4 mr-2" /> Install
                       </Button>
                     )}
                     {status?.status === 'STOPPED' && (
-                      <Button size="sm" onClick={() => handleAction(bot.applicationId, 'start')} disabled={actionLoading === bot.id}>
+                      <Button size="sm" onClick={() => handleAction(bot.applicationId || '', 'start')} disabled={actionLoading === bot.id}>
                         <Play className="h-4 w-4 mr-2" /> Start
                       </Button>
                     )}
                     {status?.status === 'RUNNING' && (
                       <>
-                        <Button size="sm" variant="destructive" onClick={() => handleAction(bot.applicationId, 'stop')} disabled={actionLoading === bot.id}>
+                        <Button size="sm" variant="destructive" onClick={() => handleAction(bot.applicationId || '', 'stop')} disabled={actionLoading === bot.id}>
                           <Square className="h-4 w-4 mr-2" /> Stop
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => handleAction(bot.applicationId, 'restart')} disabled={actionLoading === bot.id}>
+                        <Button size="sm" variant="outline" onClick={() => handleAction(bot.applicationId || '', 'restart')} disabled={actionLoading === bot.id}>
                           <RotateCw className="h-4 w-4 mr-2" /> Restart
                         </Button>
                       </>
                     )}
                     {(status?.status === 'RUNNING' || status?.status === 'STOPPED') && (
-                      <Button size="sm" variant="outline" onClick={() => handleAction(bot.applicationId, 'update')} disabled={actionLoading === bot.id}>
+                      <Button size="sm" variant="outline" onClick={() => handleAction(bot.applicationId || '', 'update')} disabled={actionLoading === bot.id}>
                         <ArrowUp className="h-4 w-4 mr-2" /> Update
                       </Button>
                     )}
                     {status?.status !== 'NOT_INSTALLED' && (
                       <>
-                        <Button size="sm" variant="ghost" onClick={() => handleAction(bot.applicationId, 'logs')}>
+                        <Button size="sm" variant="ghost" onClick={() => handleAction(bot.applicationId || '', 'logs')}>
                           <FileText className="h-4 w-4 mr-2" /> Logs
                         </Button>
                         <Button size="sm" variant="ghost">
@@ -309,7 +309,7 @@ export function VPSDeployBotPage() {
                     <Button
                       size="sm"
                       variant={bot.enabled ? 'destructive' : 'default'}
-                      onClick={() => handleToggle(bot.id, bot.applicationId)}
+                      onClick={() => handleToggle(bot.id, bot.applicationId || '')}
                       disabled={actionLoading === bot.id}
                     >
                       {bot.enabled ? <PowerOff className="h-4 w-4 mr-2" /> : <Power className="h-4 w-4 mr-2" />}
@@ -322,7 +322,7 @@ export function VPSDeployBotPage() {
                         className="text-destructive"
                         onClick={() => {
                           if (confirm('Uninstall this bot? This cannot be undone.')) {
-                            handleAction(bot.applicationId, 'uninstall');
+                            handleAction(bot.applicationId || '', 'uninstall');
                           }
                         }}
                         disabled={actionLoading === bot.id}

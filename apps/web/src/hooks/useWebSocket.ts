@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
+/// <reference types="node" />
 
 interface WebSocketMessage {
   type: string;

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { terminalApi, TerminalSession } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
 import { Terminal as TerminalIcon, Send, Trash2, Copy, Loader2 } from 'lucide-react';
 
 interface TerminalLine {

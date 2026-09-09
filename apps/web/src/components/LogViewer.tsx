@@ -9,6 +9,7 @@ interface LogEntry {
   level: string;
   message: string;
   timestamp: string;
+  createdAt: string;
   metadata?: Record<string, unknown>;
 }
 

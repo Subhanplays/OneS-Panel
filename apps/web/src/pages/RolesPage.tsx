@@ -392,8 +392,8 @@ function RoleModal({ role, onClose, onSave }: { role: Role | null; onClose: () =
             <label className="text-sm font-medium">Permissions</label>
             <div className="mt-2 space-y-3">
               {Object.entries(PERMISSION_CATEGORIES).map(([category, perms]) => {
-                const allSelected = perms.every((p) => permissions.includes(p));
-                const someSelected = perms.some((p) => permissions.includes(p));
+                const allSelected = perms.every((p) => permissions.includes(p.permission));
+                const someSelected = perms.some((p) => permissions.includes(p.permission));
                 return (
                   <div key={category} className="border rounded-lg p-3">
                     <div className="flex items-center gap-2 mb-2">

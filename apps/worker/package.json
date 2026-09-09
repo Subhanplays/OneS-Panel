@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@ones-panel/database": "workspace:*",
+    "@ones-panel/service-manager": "workspace:*",
     "@ones-panel/shared": "workspace:*",
     "bullmq": "^5.1.0",
     "dotenv": "^16.3.0",

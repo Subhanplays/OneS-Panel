@@ -34,7 +34,6 @@ import {
   Bell,
   Zap,
   Settings2,
-  Uninstall,
   Edit,
   Eye,
 } from 'lucide-react';
