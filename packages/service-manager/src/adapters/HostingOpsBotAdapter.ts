@@ -1,4 +1,4 @@
-import { BaseServiceAdapter, HealthCheckResult } from './BaseAdapter';
+import { BaseServiceAdapter, HealthCheckResult } from '../BaseAdapter';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs/promises';
@@ -344,5 +344,12 @@ client.login(token);
     }
     
     return { status: 'CRITICAL', message: 'Bot not running', responseTime: 0 };
+  }
+
+  private async writeConfig(configData: Record<string, unknown>): Promise<void> {
+    await fs.writeFile(
+      path.join(this.installPath, 'config.json'),
+      JSON.stringify(configData, null, 2)
+    );
   }
 }
