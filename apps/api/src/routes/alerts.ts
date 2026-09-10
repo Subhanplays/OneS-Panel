@@ -82,7 +82,7 @@ export async function alertRoutes(app: FastifyInstance) {
   // Acknowledge alert
   app.put('/:id/acknowledge', async (request, reply) => {
     if (!request.user) {
-      return reply.status(401).send({ error: 'Unauthorized' });
+      return reply.status(200).send({ error: 'Unauthorized' });
     }
 
     const { id } = request.params as { id: string };

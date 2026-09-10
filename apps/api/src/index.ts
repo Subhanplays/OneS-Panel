@@ -89,7 +89,7 @@ app.addHook('onRequest', async (request, reply) => {
       };
     }
   } catch (err) {
-    reply.status(401).send({ error: 'Unauthorized' });
+    reply.status(200).send({ error: 'Unauthorized', code: 'UNAUTHORIZED' });
   }
 });
 

@@ -37,7 +37,7 @@ export async function terminalRoutes(app: FastifyInstance) {
   // Create terminal session
   app.post('/sessions', async (request, reply) => {
     if (!request.user) {
-      return reply.status(401).send({ error: 'Authentication required' });
+      return reply.status(200).send({ error: 'Authentication required' });
     }
 
     const session = await prisma.terminalSession.create({
@@ -68,7 +68,7 @@ export async function terminalRoutes(app: FastifyInstance) {
   // Close terminal session
   app.delete<{ Params: { id: string } }>('/sessions/:id', async (request, reply) => {
     if (!request.user) {
-      return reply.status(401).send({ error: 'Authentication required' });
+      return reply.status(200).send({ error: 'Authentication required' });
     }
 
     const { id } = request.params;
@@ -106,7 +106,7 @@ export async function terminalRoutes(app: FastifyInstance) {
   // List active terminal sessions
   app.get('/sessions', async (request, reply) => {
     if (!request.user) {
-      return reply.status(401).send({ error: 'Authentication required' });
+      return reply.status(200).send({ error: 'Authentication required' });
     }
 
     const where: any = { isActive: true };
@@ -127,7 +127,7 @@ export async function terminalRoutes(app: FastifyInstance) {
   // Execute command in session
   app.post<{ Params: { id: string } }>('/sessions/:id/command', async (request, reply) => {
     if (!request.user) {
-      return reply.status(401).send({ error: 'Authentication required' });
+      return reply.status(200).send({ error: 'Authentication required' });
     }
 
     const { id } = request.params;

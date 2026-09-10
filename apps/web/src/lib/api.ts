@@ -16,12 +16,14 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401 && !window.location.pathname.startsWith('/login')) {
+  (response) => {
+    if (response.data?.error === 'Unauthorized' && !window.location.pathname.startsWith('/login')) {
       localStorage.removeItem('token');
       window.location.href = '/login';
     }
+    return response;
+  },
+  (error) => {
     return Promise.reject(error);
   }
 );

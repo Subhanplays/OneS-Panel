@@ -31,12 +31,12 @@ export async function authRoutes(app: FastifyInstance) {
     });
 
     if (!user) {
-      return reply.status(401).send({ error: 'Invalid credentials' });
+      return reply.status(200).send({ error: 'Invalid credentials' });
     }
 
     const valid = await bcrypt.compare(body.password, user.passwordHash);
     if (!valid) {
-      return reply.status(401).send({ error: 'Invalid credentials' });
+      return reply.status(200).send({ error: 'Invalid credentials' });
     }
 
     const token = app.jwt.sign({
@@ -93,7 +93,7 @@ export async function authRoutes(app: FastifyInstance) {
   // Get current user
   app.get('/me', async (request, reply) => {
     if (!request.user) {
-      return reply.status(401).send({ error: 'Unauthorized' });
+      return reply.status(200).send({ error: 'Unauthorized' });
     }
 
     const user = await prisma.user.findUnique({
