@@ -91,7 +91,10 @@ log "Building service-manager..."
 pnpm --filter @ones-panel/service-manager build
 
 log "Pushing database schema..."
-cd "$DIR/packages/database" && npx prisma db push --skip-generate 2>/dev/null && cd "$DIR"
+export DATABASE_URL="${DATABASE_URL:-postgresql://onespanel:onespanel_secret@localhost:5432/ones_panel}"
+export REDIS_URL="${REDIS_URL:-redis://localhost:6379}"
+[ -f "$DIR/.env" ] && set -a && source "$DIR/.env" && set +a
+cd "$DIR/packages/database" && npx prisma db push --skip-generate && cd "$DIR"
 
 log "Seeding database..."
 (
