@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { WebSocket } from '@fastify/websocket';
 import { prisma } from '@ones-panel/database';
+import os from 'os';
 
 const clients = new Set<WebSocket>();
 
@@ -102,7 +103,6 @@ export function broadcastAlert(alert: any) {
 }
 
 function getSystemMetrics() {
-  const os = require('os');
   const cpus = os.cpus();
   const totalMem = os.totalmem();
   const freeMem = os.freemem();
