@@ -9,7 +9,7 @@
     "push": "prisma db push",
     "migrate": "prisma migrate dev",
     "migrate:prod": "prisma migrate deploy",
-    "seed": "ts-node src/seed.ts",
+    "seed": "node dist/seed.js",
     "studio": "prisma studio"
   },
   "dependencies": {
