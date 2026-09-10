@@ -57,7 +57,7 @@ export function PerformancePage() {
   const fetchHistory = async () => {
     try {
       const response = await performanceApi.getHistory(period);
-      setHistory(response.data);
+      setHistory(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
       console.error('Failed to fetch history:', err);
     }

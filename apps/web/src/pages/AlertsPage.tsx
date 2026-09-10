@@ -33,7 +33,7 @@ export function AlertsPage() {
         alertsApi.getRules(),
         alertsApi.stats(),
       ]);
-      setAlerts(alertsRes.data.alerts);
+      setAlerts(alertsRes.data.alerts || []);
       setRules(rulesRes.data);
       setStats(statsRes.data);
     } catch (err) {

@@ -33,7 +33,7 @@ export function AuditLogsPage() {
         resource: filters.resource || undefined,
         action: filters.action || undefined,
       });
-      setLogs(response.data.data);
+      setLogs(response.data.data || []);
       setTotal(response.data.total);
       setHasMore(response.data.hasMore);
     } catch (err) {

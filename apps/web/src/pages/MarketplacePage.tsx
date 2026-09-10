@@ -47,7 +47,7 @@ export function MarketplacePage() {
         applicationsApi.getMarketplace(),
         applicationsApi.list(),
       ]);
-      setMarketplace(marketplaceRes.data);
+      setMarketplace(marketplaceRes.data || []);
       setApplications(appsRes.data);
     } catch (err) {
       console.error('Failed to fetch marketplace:', err);

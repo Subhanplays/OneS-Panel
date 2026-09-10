@@ -20,7 +20,7 @@ export function UsersPage() {
   const fetchUsers = async () => {
     try {
       const response = await usersApi.list();
-      setUsers(response.data);
+      setUsers(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
       console.error('Failed to fetch users:', err);
     } finally {

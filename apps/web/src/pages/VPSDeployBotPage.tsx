@@ -61,7 +61,7 @@ export function VPSDeployBotPage() {
   const fetchBots = async () => {
     try {
       const response = await api.get('/bots');
-      const botList = response.data.data.filter((b: DiscordBot) => b.features.includes('vps-deploy'));
+      const botList = (response.data.data || []).filter((b: DiscordBot) => b.features.includes('vps-deploy'));
       setBots(botList);
 
       // Fetch status for each bot

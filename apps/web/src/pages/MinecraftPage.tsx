@@ -97,8 +97,8 @@ export function MinecraftPage() {
         api.get('/minecraft/nodes'),
         api.get('/minecraft/stats'),
       ]);
-      setServers(serversRes.data);
-      setNodes(nodesRes.data);
+      setServers(Array.isArray(serversRes.data) ? serversRes.data : []);
+      setNodes(Array.isArray(nodesRes.data) ? nodesRes.data : []);
       setStats(statsRes.data);
     } catch (err) {
       console.error('Failed to fetch Minecraft data:', err);

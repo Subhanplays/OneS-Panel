@@ -58,7 +58,7 @@ export function VPSPage() {
   const fetchInstances = async () => {
     try {
       const response = await vpsApi.list();
-      setInstances(response.data);
+      setInstances(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
       console.error('Failed to fetch VPS instances:', err);
     } finally {
