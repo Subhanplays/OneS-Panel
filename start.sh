@@ -77,14 +77,18 @@ sudo -u postgres psql -c "ALTER USER onespanel WITH SUPERUSER;" 2>/dev/null || t
 
 # ---- Install dependencies ----
 log "Installing pnpm dependencies..."
-pnpm install --frozen-lockfile 2>/dev/null || pnpm install
+pnpm install --no-frozen-lockfile 2>/dev/null || pnpm install
 
 # ---- Build ----
 log "Cleaning old builds..."
-rm -rf apps/api/dist apps/worker/dist apps/web/dist packages/shared/dist
+rm -rf apps/api/dist apps/worker/dist apps/web/dist packages/shared/dist packages/service-manager/dist
 
 log "Building shared package..."
 pnpm --filter @ones-panel/shared build
+
+log "Building service-manager..."
+rm -rf packages/service-manager/dist
+pnpm --filter @ones-panel/service-manager build
 
 log "Generating Prisma client..."
 pnpm --filter @ones-panel/database generate
