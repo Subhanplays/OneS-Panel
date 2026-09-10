@@ -19,7 +19,7 @@ pkill -f "node apps/worker/dist" 2>/dev/null || true
 pkill -f "npx serve" 2>/dev/null || true
 pkill -f "serve apps/web" 2>/dev/null || true
 # Kill anything on port 8080
-fuser -k 8080/tcp 2>/dev/null || true
+ss -tlnp 'sport = :8080' 2>/dev/null | grep -oP 'pid=\K[0-9]+' | xargs kill 2>/dev/null || true
 sleep 1
 
 if ! command -v node &>/dev/null; then
@@ -106,6 +106,8 @@ log "Building Web..."
 pnpm --filter @ones-panel/web build
 
 mkdir -p "$DIR/logs"
+> "$DIR/logs/api.log"
+> "$DIR/logs/worker.log"
 
 log "Starting API on port 8080 (serves frontend + API)..."
 cd "$DIR"
