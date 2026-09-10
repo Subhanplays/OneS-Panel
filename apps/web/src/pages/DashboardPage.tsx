@@ -80,6 +80,9 @@ export function DashboardPage() {
   }
 
   const sys = data?.system || { cpu: 0, memory: { used: 0, total: 0, percentage: 0 }, disk: { used: 0, total: 0, percentage: 0 }, uptime: 0, loadAverage: [0, 0, 0] };
+  const cpu = Number(sys.cpu) || 0;
+  const memPct = Number(sys.memory?.percentage) || 0;
+  const diskPct = Number(sys.disk?.percentage) || 0;
   const apps = data?.applications || { total: 0, running: 0, stopped: 0, error: 0, list: [] };
 
   const formatBytes = (bytes: number) => {
@@ -122,9 +125,9 @@ export function DashboardPage() {
             <Cpu className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{sys.cpu.toFixed(1)}%</div>
+            <div className="text-2xl font-bold">{cpu.toFixed(1)}%</div>
             <div className="mt-2 h-2 rounded-full bg-muted">
-              <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${sys.cpu}%` }} />
+              <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${cpu}%` }} />
             </div>
           </CardContent>
         </Card>
@@ -134,10 +137,10 @@ export function DashboardPage() {
             <MemoryStick className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{sys.memory.percentage.toFixed(1)}%</div>
+            <div className="text-2xl font-bold">{memPct.toFixed(1)}%</div>
             <p className="text-xs text-muted-foreground">{formatBytes(sys.memory.used)} / {formatBytes(sys.memory.total)}</p>
             <div className="mt-2 h-2 rounded-full bg-muted">
-              <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${sys.memory.percentage}%` }} />
+              <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${memPct}%` }} />
             </div>
           </CardContent>
         </Card>
@@ -147,10 +150,10 @@ export function DashboardPage() {
             <HardDrive className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{sys.disk.percentage.toFixed(1)}%</div>
+            <div className="text-2xl font-bold">{diskPct.toFixed(1)}%</div>
             <p className="text-xs text-muted-foreground">{formatBytes(sys.disk.used)} / {formatBytes(sys.disk.total)}</p>
             <div className="mt-2 h-2 rounded-full bg-muted">
-              <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${sys.disk.percentage}%` }} />
+              <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${diskPct}%` }} />
             </div>
           </CardContent>
         </Card>
@@ -161,7 +164,7 @@ export function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatUptime(sys.uptime)}</div>
-            <p className="text-xs text-muted-foreground">Load: {sys.loadAverage.map(l => l.toFixed(2)).join(', ')}</p>
+            <p className="text-xs text-muted-foreground">Load: {(sys.loadAverage || [0,0,0]).map((l: any) => Number(l).toFixed(2)).join(', ')}</p>
           </CardContent>
         </Card>
       </div>
