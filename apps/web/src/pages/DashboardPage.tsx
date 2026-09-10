@@ -79,7 +79,7 @@ export function DashboardPage() {
     );
   }
 
-  const sys = data?.system || {};
+  const sys: any = data?.system || {};
   const cpu = Number(sys.cpu) || 0;
   const mem = sys.memory || { used: 0, total: 0, percentage: 0 };
   const disk = sys.disk || { used: 0, total: 0, percentage: 0 };
