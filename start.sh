@@ -94,7 +94,13 @@ log "Pushing database schema..."
 cd "$DIR/packages/database" && npx prisma db push --skip-generate 2>/dev/null && cd "$DIR"
 
 log "Seeding database..."
-cd "$DIR" && set -a; source "$DIR/.env" 2>/dev/null; set +a; cd "$DIR/packages/database" && node dist/seed.js || warn "Seed skipped"
+(
+  set -a
+  [ -f "$DIR/.env" ] && source "$DIR/.env"
+  set +a
+  cd "$DIR/packages/database"
+  node dist/seed.js
+) && log "Seed done" || warn "Seed skipped"
 
 log "Building API..."
 pnpm --filter @ones-panel/api build
