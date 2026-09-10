@@ -63,8 +63,13 @@ app.register(rateLimit, {
 
 app.register(websocket);
 
-// Auth hook
+// Auth hook - only for API routes
 app.addHook('onRequest', async (request, reply) => {
+  // Skip auth for non-API routes (static files, SPA)
+  if (!request.url.startsWith('/api')) {
+    return;
+  }
+
   const publicPaths = ['/api/auth/login', '/api/auth/register', '/api/health'];
   if (publicPaths.some(path => request.url.startsWith(path))) {
     return;
