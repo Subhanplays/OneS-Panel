@@ -14,20 +14,17 @@ log() { echo -e "${GREEN}[OneS-Panel]${NC} $1"; }
 warn() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 err() { echo -e "${RED}[ERROR]${NC} $1"; }
 
-# Stop old instances
 pkill -f "node apps/api/dist" 2>/dev/null || true
 pkill -f "node apps/worker/dist" 2>/dev/null || true
 pkill -f "serve apps/web/dist" 2>/dev/null || true
 sleep 1
 
-# ---- Install Node.js if missing ----
 if ! command -v node &>/dev/null; then
     log "Installing Node.js 20..."
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash - 2>/dev/null
     apt-get install -y nodejs 2>/dev/null
 fi
 
-# ---- Install pnpm if missing ----
 if ! command -v pnpm &>/dev/null; then
     log "Installing pnpm..."
     npm install -g pnpm 2>/dev/null
@@ -38,14 +35,12 @@ export PATH="$(npm config get prefix 2>/dev/null)/bin:$HOME/.local/share/pnpm:$P
 log "Node: $(node --version)"
 log "pnpm: $(pnpm --version)"
 
-# ---- Install PostgreSQL if missing ----
 if ! command -v psql &>/dev/null; then
     log "Installing PostgreSQL..."
     apt-get update -qq
     apt-get install -y postgresql postgresql-contrib 2>/dev/null
 fi
 
-# Start PostgreSQL without systemd
 pg_isready -q 2>/dev/null || {
     log "Starting PostgreSQL..."
     pg_ctlcluster 14 main start 2>/dev/null || \
@@ -56,7 +51,6 @@ pg_isready -q 2>/dev/null || {
 }
 sleep 2
 
-# ---- Install Redis if missing ----
 if ! command -v redis-cli &>/dev/null; then
     log "Installing Redis..."
     apt-get install -y redis-server 2>/dev/null
@@ -68,36 +62,36 @@ redis-cli ping 2>/dev/null | grep -q PONG || {
     warn "Redis may need manual start"
 }
 
-# ---- Setup database ----
 log "Setting up database..."
 sudo -u postgres psql -c "CREATE USER onespanel WITH PASSWORD 'onespanel_secret';" 2>/dev/null || true
 sudo -u postgres psql -c "CREATE DATABASE ones_panel OWNER onespanel;" 2>/dev/null || true
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ones_panel TO onespanel;" 2>/dev/null || true
 sudo -u postgres psql -c "ALTER USER onespanel WITH SUPERUSER;" 2>/dev/null || true
 
-# ---- Install dependencies ----
 log "Installing pnpm dependencies..."
 pnpm install --no-frozen-lockfile 2>/dev/null || pnpm install
 
-# ---- Build ----
+# ---- Build in dependency order ----
 log "Cleaning old builds..."
-rm -rf apps/api/dist apps/worker/dist apps/web/dist packages/shared/dist packages/service-manager/dist
+rm -rf apps/api/dist apps/worker/dist apps/web/dist packages/shared/dist packages/service-manager/dist packages/database/dist
 
-log "Building shared package..."
+log "Building shared..."
 pnpm --filter @ones-panel/shared build
-
-log "Building service-manager..."
-rm -rf packages/service-manager/dist
-pnpm --filter @ones-panel/service-manager build
 
 log "Generating Prisma client..."
 pnpm --filter @ones-panel/database generate
+
+log "Building database..."
+pnpm --filter @ones-panel/database build
+
+log "Building service-manager..."
+pnpm --filter @ones-panel/service-manager build
 
 log "Pushing database schema..."
 cd "$DIR/packages/database" && npx prisma db push --skip-generate 2>/dev/null && cd "$DIR"
 
 log "Seeding database..."
-cd "$DIR/packages/database" && npx tsx src/seed.ts && cd "$DIR"
+cd "$DIR/packages/database" && node dist/seed.js 2>/dev/null && cd "$DIR" || warn "Seed skipped (will seed on first run)"
 
 log "Building API..."
 pnpm --filter @ones-panel/api build
@@ -108,10 +102,8 @@ pnpm --filter @ones-panel/worker build
 log "Building Web..."
 pnpm --filter @ones-panel/web build
 
-# ---- Create logs ----
 mkdir -p "$DIR/logs"
 
-# ---- Start services ----
 log "Starting API on port 3001..."
 cd "$DIR"
 NODE_ENV=production node apps/api/dist/index.js > "$DIR/logs/api.log" 2>&1 &
