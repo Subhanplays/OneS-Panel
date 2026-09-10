@@ -1,6 +1,4 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-/// <reference types="node" />
-
 interface WebSocketMessage {
   type: string;
   timestamp: string;
@@ -11,7 +9,7 @@ export function useWebSocket(url: string = '/ws') {
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const connect = useCallback(() => {
     try {

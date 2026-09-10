@@ -181,7 +181,7 @@ export const applicationsApi = {
   list: () => api.get<Application[]>('/applications'),
   get: (id: string) => api.get<Application>(`/applications/${id}`),
   getMarketplace: () => api.get<MarketplaceItem[]>('/applications/marketplace'),
-  update: (id: string, data: Partial<Application>) =>
+  update: (id: string, data?: Partial<Application>) =>
     api.put<Application>(`/applications/${id}`, data),
   install: (id: string) => api.post(`/applications/${id}/install`),
   start: (id: string) => api.post(`/applications/${id}/start`),
