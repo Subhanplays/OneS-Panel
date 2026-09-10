@@ -1,6 +1,7 @@
 {
   "name": "@ones-panel/api",
   "version": "1.0.0",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -12,6 +13,7 @@
     "@fastify/cors": "^9.0.0",
     "@fastify/jwt": "^8.0.0",
     "@fastify/rate-limit": "^9.0.0",
+    "@fastify/static": "^7.0.0",
     "@fastify/websocket": "^10.0.0",
     "@ones-panel/database": "workspace:*",
     "@ones-panel/service-manager": "workspace:*",

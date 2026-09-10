@@ -5,33 +5,39 @@ import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import rateLimit from '@fastify/rate-limit';
 import websocket from '@fastify/websocket';
+import fastifyStatic from '@fastify/static';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { prisma } from '@ones-panel/database';
-import { authRoutes } from './routes/auth';
-import { brandingRoutes } from './routes/branding';
-import { applicationRoutes } from './routes/applications';
-import { dashboardRoutes } from './routes/dashboard';
-import { settingsRoutes } from './routes/settings';
-import { userRoutes } from './routes/users';
-import { auditRoutes } from './routes/audit';
-import { performanceRoutes } from './routes/performance';
-import { alertRoutes } from './routes/alerts';
-import { healthCheckRoutes } from './routes/healthchecks';
-import { dockerRoutes } from './routes/docker';
-import { statusPageRoutes } from './routes/statuspage';
-import { backupRoutes } from './routes/backups';
-import { vpsRoutes } from './routes/vps';
-import { servicesRoutes } from './routes/services';
-import { analyticsRoutes } from './routes/analytics';
-import { logsRoutes } from './routes/logs';
-import { botsRoutes } from './routes/bots';
-import { minecraftRoutes } from './routes/minecraft';
-import { campaignRoutes } from './routes/campaigns';
-import { broadcastRoutes } from './routes/broadcasts';
-import { embedRoutes } from './routes/embeds';
-import { discordAnalyticsRoutes } from './routes/discord-analytics';
-import { rolesRoutes } from './routes/roles';
-import { terminalRoutes } from './routes/terminal';
-import { websocketRoutes, startMetricsBroadcast } from './websocket';
+import { authRoutes } from './routes/auth.js';
+import { brandingRoutes } from './routes/branding.js';
+import { applicationRoutes } from './routes/applications.js';
+import { dashboardRoutes } from './routes/dashboard.js';
+import { settingsRoutes } from './routes/settings.js';
+import { userRoutes } from './routes/users.js';
+import { auditRoutes } from './routes/audit.js';
+import { performanceRoutes } from './routes/performance.js';
+import { alertRoutes } from './routes/alerts.js';
+import { healthCheckRoutes } from './routes/healthchecks.js';
+import { dockerRoutes } from './routes/docker.js';
+import { statusPageRoutes } from './routes/statuspage.js';
+import { backupRoutes } from './routes/backups.js';
+import { vpsRoutes } from './routes/vps.js';
+import { servicesRoutes } from './routes/services.js';
+import { analyticsRoutes } from './routes/analytics.js';
+import { logsRoutes } from './routes/logs.js';
+import { botsRoutes } from './routes/bots.js';
+import { minecraftRoutes } from './routes/minecraft.js';
+import { campaignRoutes } from './routes/campaigns.js';
+import { broadcastRoutes } from './routes/broadcasts.js';
+import { embedRoutes } from './routes/embeds.js';
+import { discordAnalyticsRoutes } from './routes/discord-analytics.js';
+import { rolesRoutes } from './routes/roles.js';
+import { terminalRoutes } from './routes/terminal.js';
+import { websocketRoutes, startMetricsBroadcast } from './websocket.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = Fastify({
   logger: {
@@ -41,7 +47,7 @@ const app = Fastify({
 
 // Register plugins
 app.register(cors, {
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  origin: process.env.CORS_ORIGIN || true,
   credentials: true,
 });
 
@@ -115,19 +121,34 @@ app.register(rolesRoutes, { prefix: '/api/roles' });
 app.register(terminalRoutes, { prefix: '/api/terminal' });
 app.register(websocketRoutes);
 
+// Serve static frontend files
+const webDist = path.resolve(__dirname, '../../web/dist');
+app.register(fastifyStatic, {
+  root: webDist,
+  prefix: '/',
+  wildcard: false,
+});
+
+// SPA fallback - serve index.html for non-API routes
+app.setNotFoundHandler((request, reply) => {
+  if (request.url.startsWith('/api') || request.url.startsWith('/ws')) {
+    reply.status(404).send({ error: 'Not found' });
+  } else {
+    reply.sendFile('index.html');
+  }
+});
+
 // Start server
 const start = async () => {
   try {
-    const port = parseInt(process.env.PORT || '3001');
+    const port = parseInt(process.env.PORT || '8080');
     const host = process.env.HOST || '0.0.0.0';
 
     await app.listen({ port, host });
     console.log(`API server running on http://${host}:${port}`);
 
-    // Start periodic metrics broadcast
     startMetricsBroadcast(30000);
 
-    // Monitor application status changes
     setInterval(async () => {
       try {
         const applications = await prisma.application.findMany({
@@ -137,8 +158,7 @@ const start = async () => {
         for (const app of applications) {
           const lastCheck = app.updatedAt?.getTime() || 0;
           const now = Date.now();
-          
-          // Check every 60 seconds
+
           if (now - lastCheck > 60000) {
             // Status will be checked by the adapter when requested
           }

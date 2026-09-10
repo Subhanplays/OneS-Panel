@@ -16,7 +16,7 @@ err() { echo -e "${RED}[ERROR]${NC} $1"; }
 
 pkill -f "node apps/api/dist" 2>/dev/null || true
 pkill -f "node apps/worker/dist" 2>/dev/null || true
-pkill -f "serve apps/web/dist" 2>/dev/null || true
+pkill -f "npx serve" 2>/dev/null || true
 sleep 1
 
 if ! command -v node &>/dev/null; then
@@ -91,7 +91,7 @@ log "Pushing database schema..."
 cd "$DIR/packages/database" && npx prisma db push --skip-generate 2>/dev/null && cd "$DIR"
 
 log "Seeding database..."
-cd "$DIR/packages/database" && node dist/seed.js 2>/dev/null && cd "$DIR" || warn "Seed skipped (will seed on first run)"
+cd "$DIR/packages/database" && node dist/seed.js 2>/dev/null && cd "$DIR" || warn "Seed skipped"
 
 log "Building API..."
 pnpm --filter @ones-panel/api build
@@ -104,7 +104,7 @@ pnpm --filter @ones-panel/web build
 
 mkdir -p "$DIR/logs"
 
-log "Starting API on port 3001..."
+log "Starting API on port 8080 (serves frontend + API)..."
 cd "$DIR"
 NODE_ENV=production node apps/api/dist/index.js > "$DIR/logs/api.log" 2>&1 &
 echo $! > "$DIR/logs/api.pid"
@@ -113,26 +113,21 @@ sleep 3
 if kill -0 $(cat "$DIR/logs/api.pid") 2>/dev/null; then
     log "API started OK"
 else
-    err "API failed! Last 10 lines:"
-    tail -10 "$DIR/logs/api.log"
+    err "API failed! Last 20 lines:"
+    tail -20 "$DIR/logs/api.log"
 fi
 
 log "Starting Worker..."
 NODE_ENV=production node apps/worker/dist/index.js > "$DIR/logs/worker.log" 2>&1 &
 echo $! > "$DIR/logs/worker.pid"
 
-log "Starting Web on port 8080..."
-npx serve apps/web/dist -l 8080 -s > "$DIR/logs/web.log" 2>&1 &
-echo $! > "$DIR/logs/web.pid"
-
 echo ""
 echo -e "${BLUE}============================================${NC}"
 echo -e "${BLUE}       OneS-Panel is running!              ${NC}"
 echo -e "${BLUE}============================================${NC}"
 echo ""
-echo -e "${GREEN}Web:${NC}      http://localhost:8080"
-echo -e "${GREEN}API:${NC}      http://localhost:3001"
-echo -e "${GREEN}Default:${NC}  admin@onespanel.com / admin123"
+echo -e "${GREEN}Web + API:${NC} http://localhost:8080"
+echo -e "${GREEN}Default:${NC}   admin@onespanel.com / admin123"
 echo ""
 echo -e "${YELLOW}Logs:${NC}     $DIR/logs/"
 echo -e "${YELLOW}Stop:${NC}     pkill -f 'node apps/'"
