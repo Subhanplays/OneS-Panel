@@ -87,10 +87,10 @@ log "Generating Prisma client..."
 pnpm --filter @ones-panel/database generate
 
 log "Pushing database schema..."
-cd packages/database && npx prisma db push --skip-generate 2>/dev/null && cd "$DIR"
+cd "$DIR/packages/database" && npx prisma db push --skip-generate 2>/dev/null && cd "$DIR"
 
 log "Seeding database..."
-cd packages/database && npx ts-node src/seed.ts 2>/dev/null && cd "$DIR"
+cd "$DIR/packages/database" && npx ts-node src/seed.ts && cd "$DIR"
 
 log "Building API..."
 pnpm --filter @ones-panel/api build
