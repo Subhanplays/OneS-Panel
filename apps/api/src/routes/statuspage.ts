@@ -9,6 +9,20 @@ const serviceSchema = z.object({
   url: z.string().url().optional(),
 });
 
+const INCIDENT_STATUS_MAP: Record<string, string> = {
+  investigating: 'INVESTIGATING',
+  identified: 'IDENTIFIED',
+  monitoring: 'MONITORING',
+  resolved: 'RESOLVED',
+};
+
+const MAINTENANCE_STATUS_MAP: Record<string, string> = {
+  scheduled: 'SCHEDULED',
+  in_progress: 'IN_PROGRESS',
+  completed: 'COMPLETED',
+  cancelled: 'CANCELLED',
+};
+
 const incidentSchema = z.object({
   title: z.string(),
   message: z.string(),
@@ -201,7 +215,10 @@ export async function statusPageRoutes(app: FastifyInstance) {
     const body = incidentSchema.parse(request.body);
 
     const incident = await prisma.incident.create({
-      data: body,
+      data: {
+        ...body,
+        status: INCIDENT_STATUS_MAP[body.status] as any,
+      },
     });
 
     // Log audit
@@ -232,6 +249,7 @@ export async function statusPageRoutes(app: FastifyInstance) {
       where: { id },
       data: {
         ...body,
+        ...(body.status ? { status: INCIDENT_STATUS_MAP[body.status] as any } : {}),
         ...(body.status === 'resolved' ? { resolvedAt: new Date() } : {}),
       },
     });
@@ -263,6 +281,7 @@ export async function statusPageRoutes(app: FastifyInstance) {
     const maintenance = await prisma.maintenance.create({
       data: {
         ...body,
+        status: MAINTENANCE_STATUS_MAP[body.status] as any,
         scheduledAt: new Date(body.scheduledAt),
       },
     });
@@ -295,6 +314,7 @@ export async function statusPageRoutes(app: FastifyInstance) {
       where: { id },
       data: {
         ...body,
+        ...(body.status ? { status: MAINTENANCE_STATUS_MAP[body.status] as any } : {}),
         ...(body.scheduledAt ? { scheduledAt: new Date(body.scheduledAt) } : {}),
       },
     });

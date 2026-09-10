@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import './types';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
@@ -28,9 +29,9 @@ import { campaignRoutes } from './routes/campaigns';
 import { broadcastRoutes } from './routes/broadcasts';
 import { embedRoutes } from './routes/embeds';
 import { discordAnalyticsRoutes } from './routes/discord-analytics';
-import { roleRoutes } from './routes/roles';
+import { rolesRoutes } from './routes/roles';
 import { terminalRoutes } from './routes/terminal';
-import { websocketRoutes, startMetricsBroadcast, broadcastStatus, broadcastAlert } from './websocket';
+import { websocketRoutes, startMetricsBroadcast } from './websocket';
 
 const app = Fastify({
   logger: {
@@ -56,18 +57,6 @@ app.register(rateLimit, {
 
 app.register(websocket);
 
-// Decorate request with user
-declare module 'fastify' {
-  interface FastifyRequest {
-    user?: {
-      id: string;
-      email: string;
-      role: string;
-      permissions: string[];
-    };
-  }
-}
-
 // Auth hook
 app.addHook('onRequest', async (request, reply) => {
   const publicPaths = ['/api/auth/login', '/api/auth/register', '/api/health'];
@@ -78,7 +67,7 @@ app.addHook('onRequest', async (request, reply) => {
   try {
     await request.jwtVerify();
     const user = await prisma.user.findUnique({
-      where: { id: request.user?.id },
+      where: { id: request.user.id },
     });
     if (user) {
       request.user = {
@@ -122,7 +111,7 @@ app.register(campaignRoutes, { prefix: '/api/campaigns' });
 app.register(broadcastRoutes, { prefix: '/api/broadcasts' });
 app.register(embedRoutes, { prefix: '/api/embeds' });
 app.register(discordAnalyticsRoutes, { prefix: '/api/discord-analytics' });
-app.register(roleRoutes, { prefix: '/api/roles' });
+app.register(rolesRoutes, { prefix: '/api/roles' });
 app.register(terminalRoutes, { prefix: '/api/terminal' });
 app.register(websocketRoutes);
 

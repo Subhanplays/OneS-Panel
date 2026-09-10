@@ -57,12 +57,12 @@ export async function brandingRoutes(app: FastifyInstance) {
         data: {
           id: 'default',
           ...body,
-        },
+        } as any,
       });
     } else {
       branding = await prisma.branding.update({
         where: { id: branding.id },
-        data: body,
+        data: body as any,
       });
     }
 
@@ -73,7 +73,7 @@ export async function brandingRoutes(app: FastifyInstance) {
         action: 'UPDATE',
         resource: 'branding',
         resourceId: branding.id,
-        details: body,
+        details: body as any,
         ipAddress: request.ip,
         userAgent: request.headers['user-agent'] || '',
       },

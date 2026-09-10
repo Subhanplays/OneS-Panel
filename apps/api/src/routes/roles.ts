@@ -16,6 +16,8 @@ const PERMISSION_CATEGORIES: Record<string, string[]> = {
   dashboard: ['dashboard.view'],
 };
 
+const prismaAny = prisma as any;
+
 export async function rolesRoutes(app: FastifyInstance) {
   // List all roles with permission counts
   app.get('/', async (request, reply) => {
@@ -23,11 +25,11 @@ export async function rolesRoutes(app: FastifyInstance) {
       return reply.status(403).send({ error: 'Forbidden' });
     }
 
-    const roles = await prisma.role.findMany({
+    const roles = await prismaAny.role.findMany({
       orderBy: { createdAt: 'asc' },
     });
 
-    const rolesWithCounts = roles.map(role => ({
+    const rolesWithCounts = roles.map((role: any) => ({
       id: role.id,
       name: role.name,
       permissions: role.permissions,
@@ -77,12 +79,12 @@ export async function rolesRoutes(app: FastifyInstance) {
       });
     }
 
-    const existingRole = await prisma.role.findFirst({ where: { name } });
+    const existingRole = await prismaAny.role.findFirst({ where: { name } });
     if (existingRole) {
       return reply.status(409).send({ error: 'Role with this name already exists' });
     }
 
-    const role = await prisma.role.create({
+    const role = await prismaAny.role.create({
       data: {
         name,
         permissions,
@@ -117,7 +119,7 @@ export async function rolesRoutes(app: FastifyInstance) {
       permissions?: string[];
     };
 
-    const role = await prisma.role.findUnique({ where: { id } });
+    const role = await prismaAny.role.findUnique({ where: { id } });
     if (!role) {
       return reply.status(404).send({ error: 'Role not found' });
     }
@@ -136,13 +138,13 @@ export async function rolesRoutes(app: FastifyInstance) {
 
     // Check name uniqueness if changing name
     if (name && name !== role.name) {
-      const existing = await prisma.role.findFirst({ where: { name } });
+      const existing = await prismaAny.role.findFirst({ where: { name } });
       if (existing) {
         return reply.status(409).send({ error: 'Role with this name already exists' });
       }
     }
 
-    const updated = await prisma.role.update({
+    const updated = await prismaAny.role.update({
       where: { id },
       data: {
         ...(name && { name }),
@@ -174,13 +176,13 @@ export async function rolesRoutes(app: FastifyInstance) {
 
     const { id } = request.params;
 
-    const role = await prisma.role.findUnique({ where: { id } });
+    const role = await prismaAny.role.findUnique({ where: { id } });
     if (!role) {
       return reply.status(404).send({ error: 'Role not found' });
     }
 
     // Check if role is assigned to any users
-    const usersWithRole = await prisma.user.count({ where: { role: role.name } });
+    const usersWithRole = await prisma.user.count({ where: { role: role.name } as any });
     if (usersWithRole > 0) {
       return reply.status(400).send({
         error: 'Cannot delete role assigned to users',
@@ -188,7 +190,7 @@ export async function rolesRoutes(app: FastifyInstance) {
       });
     }
 
-    await prisma.role.delete({ where: { id } });
+    await prismaAny.role.delete({ where: { id } });
 
     // Log audit
     await prisma.auditLog.create({

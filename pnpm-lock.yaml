@@ -25,6 +25,9 @@ importers:
       '@ones-panel/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@ones-panel/service-manager':
+        specifier: workspace:*
+        version: link:../../packages/service-manager
       '@ones-panel/shared':
         specifier: workspace:*
         version: link:../../packages/shared

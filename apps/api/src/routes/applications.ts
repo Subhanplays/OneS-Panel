@@ -141,7 +141,7 @@ export async function applicationRoutes(app: FastifyInstance) {
 
     const updated = await prisma.application.update({
       where: { id },
-      data: body,
+      data: body as any,
     });
 
     // Clear cached adapter
@@ -154,7 +154,7 @@ export async function applicationRoutes(app: FastifyInstance) {
         action: 'UPDATE',
         resource: 'application',
         resourceId: id,
-        details: body,
+        details: body as any,
         ipAddress: request.ip,
         userAgent: request.headers['user-agent'] || '',
       },

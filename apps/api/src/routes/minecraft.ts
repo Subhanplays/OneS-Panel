@@ -25,9 +25,8 @@ const updateNodeSchema = createNodeSchema.partial();
 export async function minecraftRoutes(app: FastifyInstance) {
   app.get('/', async () => {
     const servers = await prisma.minecraftServer.findMany({
-      include: { node: true },
       orderBy: { createdAt: 'desc' },
-    });
+    } as any);
     return { data: servers };
   });
 
@@ -58,7 +57,6 @@ export async function minecraftRoutes(app: FastifyInstance) {
     const { id } = request.params as { id: string };
     const server = await prisma.minecraftServer.findUnique({
       where: { id },
-      include: { node: true },
     });
     if (!server) {
       return reply.status(404).send({ error: 'Server not found' });
@@ -88,7 +86,6 @@ export async function minecraftRoutes(app: FastifyInstance) {
         maxPlayers: parsed.data.maxPlayers,
         nodeId: parsed.data.nodeId ?? null,
       },
-      include: { node: true },
     });
 
     if (parsed.data.nodeId) {
@@ -123,7 +120,6 @@ export async function minecraftRoutes(app: FastifyInstance) {
     const server = await prisma.minecraftServer.update({
       where: { id },
       data: parsed.data,
-      include: { node: true },
     });
 
     return { data: server };
@@ -164,7 +160,6 @@ export async function minecraftRoutes(app: FastifyInstance) {
     const updated = await prisma.minecraftServer.update({
       where: { id },
       data: { status: 'running' },
-      include: { node: true },
     });
 
     return { data: updated };
@@ -185,7 +180,6 @@ export async function minecraftRoutes(app: FastifyInstance) {
     const updated = await prisma.minecraftServer.update({
       where: { id },
       data: { status: 'stopped', onlinePlayers: 0 },
-      include: { node: true },
     });
 
     return { data: updated };
@@ -202,7 +196,6 @@ export async function minecraftRoutes(app: FastifyInstance) {
     const updated = await prisma.minecraftServer.update({
       where: { id },
       data: { status: 'restarting' },
-      include: { node: true },
     });
 
     await prisma.minecraftServer.update({

@@ -9,7 +9,7 @@ export async function websocketRoutes(app: FastifyInstance) {
     clients.add(socket);
     console.log('WebSocket client connected. Total:', clients.size);
 
-    socket.on('message', async (message) => {
+    socket.on('message', async (message: Buffer) => {
       try {
         const data = JSON.parse(message.toString());
         

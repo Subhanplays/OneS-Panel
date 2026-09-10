@@ -166,7 +166,8 @@ export async function backupRoutes(app: FastifyInstance) {
 
     try {
       await fs.access(filepath);
-      return reply.sendFile(id, BACKUP_DIR);
+      const data = await fs.readFile(filepath);
+      return reply.send(data);
     } catch {
       return reply.status(404).send({ error: 'Backup not found' });
     }

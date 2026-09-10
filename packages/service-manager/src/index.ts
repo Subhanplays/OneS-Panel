@@ -1,7 +1,7 @@
 export { BaseServiceAdapter, ServiceAdapter, ServiceMetrics, HealthCheckResult } from './BaseAdapter';
 export { JTGAdapter } from './adapters/JTGAdapter';
 export { StatusPageAdapter } from './adapters/StatusPageAdapter';
-export { VPSDeployBotAdapter } from './adapters/VPSDeployBotAdapter';
+export { VPSDeployBotAdapter, VPSDeployBotConfig } from './adapters/VPSDeployBotAdapter';
 export { HostingOpsBotAdapter } from './adapters/HostingOpsBotAdapter';
 
 import { ServiceAdapter } from './BaseAdapter';

@@ -158,7 +158,7 @@ export async function healthCheckRoutes(app: FastifyInstance) {
       await prisma.healthCheck.create({
         data: {
           serviceId: id,
-          status,
+          status: status as any,
           message,
           responseTime,
         },
@@ -171,7 +171,7 @@ export async function healthCheckRoutes(app: FastifyInstance) {
       await prisma.healthCheck.create({
         data: {
           serviceId: id,
-          status: 'UNKNOWN',
+          status: 'UNKNOWN' as any,
           message: err.message || 'Check failed',
           responseTime,
         },
@@ -263,7 +263,7 @@ export async function healthCheckRoutes(app: FastifyInstance) {
         await prisma.healthCheck.create({
           data: {
             serviceId: id,
-            status,
+            status: status as any,
             message,
             responseTime,
           },

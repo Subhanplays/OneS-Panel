@@ -56,7 +56,7 @@ async function logAudit(
       action,
       resource: 'vps',
       resourceId,
-      details,
+      details: details as any,
       ipAddress: request.ip,
       userAgent: request.headers['user-agent'] || '',
     },
@@ -70,7 +70,7 @@ export async function vpsRoutes(app: FastifyInstance) {
       const adapter = await getVPSAdapter();
       const instances = await adapter.listVPS();
       return { data: instances };
-    } catch (error) {
+    } catch (error: any) {
       app.log.error(error);
       return reply.status(500).send({ error: 'Failed to list VPS instances' });
     }
@@ -82,7 +82,7 @@ export async function vpsRoutes(app: FastifyInstance) {
       const adapter = await getVPSAdapter();
       const stats = await adapter.getVPSStats();
       return { data: stats };
-    } catch (error) {
+    } catch (error: any) {
       app.log.error(error);
       return reply.status(500).send({ error: 'Failed to get VPS stats' });
     }
@@ -98,7 +98,7 @@ export async function vpsRoutes(app: FastifyInstance) {
         return reply.status(404).send({ error: 'VPS not found' });
       }
       return { data: instance };
-    } catch (error) {
+    } catch (error: any) {
       app.log.error(error);
       return reply.status(500).send({ error: 'Failed to get VPS instance' });
     }
@@ -131,7 +131,7 @@ export async function vpsRoutes(app: FastifyInstance) {
       await logAudit(request.user?.id, 'create', instance.vpsId, { memory, cpu, disk, ownerId }, request);
 
       return { data: instance };
-    } catch (error) {
+    } catch (error: any) {
       app.log.error(error);
       return reply.status(500).send({ error: error.message || 'Failed to create VPS' });
     }
@@ -145,7 +145,7 @@ export async function vpsRoutes(app: FastifyInstance) {
       await adapter.startVPS(id);
       await logAudit(request.user?.id, 'start', id, {}, request);
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       app.log.error(error);
       return reply.status(500).send({ error: error.message || 'Failed to start VPS' });
     }
@@ -159,7 +159,7 @@ export async function vpsRoutes(app: FastifyInstance) {
       await adapter.stopVPS(id);
       await logAudit(request.user?.id, 'stop', id, {}, request);
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       app.log.error(error);
       return reply.status(500).send({ error: error.message || 'Failed to stop VPS' });
     }
@@ -173,7 +173,7 @@ export async function vpsRoutes(app: FastifyInstance) {
       await adapter.restartVPS(id);
       await logAudit(request.user?.id, 'restart', id, {}, request);
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       app.log.error(error);
       return reply.status(500).send({ error: error.message || 'Failed to restart VPS' });
     }
@@ -187,7 +187,7 @@ export async function vpsRoutes(app: FastifyInstance) {
       await adapter.deleteVPS(id);
       await logAudit(request.user?.id, 'delete', id, {}, request);
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       app.log.error(error);
       return reply.status(500).send({ error: error.message || 'Failed to delete VPS' });
     }
@@ -201,7 +201,7 @@ export async function vpsRoutes(app: FastifyInstance) {
       await adapter.suspendVPS(id);
       await logAudit(request.user?.id, 'suspend', id, {}, request);
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       app.log.error(error);
       return reply.status(500).send({ error: error.message || 'Failed to suspend VPS' });
     }
@@ -215,7 +215,7 @@ export async function vpsRoutes(app: FastifyInstance) {
       await adapter.unsuspendVPS(id);
       await logAudit(request.user?.id, 'unsuspend', id, {}, request);
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       app.log.error(error);
       return reply.status(500).send({ error: error.message || 'Failed to unsuspend VPS' });
     }
@@ -235,7 +235,7 @@ export async function vpsRoutes(app: FastifyInstance) {
       await adapter.transferVPS(id, newOwnerId);
       await logAudit(request.user?.id, 'transfer', id, { newOwnerId }, request);
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       app.log.error(error);
       return reply.status(500).send({ error: error.message || 'Failed to transfer VPS' });
     }
@@ -249,7 +249,7 @@ export async function vpsRoutes(app: FastifyInstance) {
       const newPassword = await adapter.changePassword(id);
       await logAudit(request.user?.id, 'change_password', id, {}, request);
       return { data: { password: newPassword } };
-    } catch (error) {
+    } catch (error: any) {
       app.log.error(error);
       return reply.status(500).send({ error: error.message || 'Failed to change password' });
     }
@@ -262,7 +262,7 @@ export async function vpsRoutes(app: FastifyInstance) {
       const adapter = await getVPSAdapter();
       const metrics = await adapter.getVPSMetrics(id);
       return { data: metrics };
-    } catch (error) {
+    } catch (error: any) {
       app.log.error(error);
       return reply.status(500).send({ error: 'Failed to get VPS metrics' });
     }

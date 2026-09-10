@@ -119,12 +119,7 @@ export async function terminalRoutes(app: FastifyInstance) {
     const sessions = await prisma.terminalSession.findMany({
       where,
       orderBy: { lastActivityAt: 'desc' },
-      include: {
-        user: {
-          select: { id: true, name: true, email: true },
-        },
-      },
-    });
+    } as any);
 
     return { data: sessions };
   });
