@@ -79,10 +79,12 @@ export function DashboardPage() {
     );
   }
 
-  const sys = data?.system || { cpu: 0, memory: { used: 0, total: 0, percentage: 0 }, disk: { used: 0, total: 0, percentage: 0 }, uptime: 0, loadAverage: [0, 0, 0] };
+  const sys = data?.system || {};
   const cpu = Number(sys.cpu) || 0;
-  const memPct = Number(sys.memory?.percentage) || 0;
-  const diskPct = Number(sys.disk?.percentage) || 0;
+  const mem = sys.memory || { used: 0, total: 0, percentage: 0 };
+  const disk = sys.disk || { used: 0, total: 0, percentage: 0 };
+  const memPct = Number(mem.percentage) || 0;
+  const diskPct = Number(disk.percentage) || 0;
   const apps = data?.applications || { total: 0, running: 0, stopped: 0, error: 0, list: [] };
 
   const formatBytes = (bytes: number) => {
@@ -138,7 +140,7 @@ export function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{memPct.toFixed(1)}%</div>
-            <p className="text-xs text-muted-foreground">{formatBytes(sys.memory.used)} / {formatBytes(sys.memory.total)}</p>
+            <p className="text-xs text-muted-foreground">{formatBytes(mem.used)} / {formatBytes(mem.total)}</p>
             <div className="mt-2 h-2 rounded-full bg-muted">
               <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${memPct}%` }} />
             </div>
@@ -151,7 +153,7 @@ export function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{diskPct.toFixed(1)}%</div>
-            <p className="text-xs text-muted-foreground">{formatBytes(sys.disk.used)} / {formatBytes(sys.disk.total)}</p>
+            <p className="text-xs text-muted-foreground">{formatBytes(disk.used)} / {formatBytes(disk.total)}</p>
             <div className="mt-2 h-2 rounded-full bg-muted">
               <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${diskPct}%` }} />
             </div>
