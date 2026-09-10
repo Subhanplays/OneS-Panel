@@ -70,7 +70,7 @@ app.addHook('onRequest', async (request, reply) => {
     return;
   }
 
-  const publicPaths = ['/api/auth/login', '/api/auth/register', '/api/health', '/api/branding'];
+  const publicPaths = ['/api/auth/login', '/api/auth/register', '/api/auth/setup', '/api/health', '/api/branding'];
   if (publicPaths.some(path => request.url.startsWith(path))) {
     return;
   }
