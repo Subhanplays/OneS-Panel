@@ -17,6 +17,9 @@ err() { echo -e "${RED}[ERROR]${NC} $1"; }
 pkill -f "node apps/api/dist" 2>/dev/null || true
 pkill -f "node apps/worker/dist" 2>/dev/null || true
 pkill -f "npx serve" 2>/dev/null || true
+pkill -f "serve apps/web" 2>/dev/null || true
+# Kill anything on port 8080
+fuser -k 8080/tcp 2>/dev/null || true
 sleep 1
 
 if ! command -v node &>/dev/null; then
@@ -91,7 +94,7 @@ log "Pushing database schema..."
 cd "$DIR/packages/database" && npx prisma db push --skip-generate 2>/dev/null && cd "$DIR"
 
 log "Seeding database..."
-cd "$DIR/packages/database" && node dist/seed.js 2>/dev/null && cd "$DIR" || warn "Seed skipped"
+cd "$DIR" && set -a; source "$DIR/.env" 2>/dev/null; set +a; cd "$DIR/packages/database" && node dist/seed.js || warn "Seed skipped"
 
 log "Building API..."
 pnpm --filter @ones-panel/api build
