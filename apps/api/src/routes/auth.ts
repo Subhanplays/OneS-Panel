@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { prisma } from '@ones-panel/database';
-import * as bcrypt from 'bcryptjs';
+import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 
 const loginSchema = z.object({

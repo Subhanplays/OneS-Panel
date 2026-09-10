@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { prisma } from '@ones-panel/database';
 import { z } from 'zod';
-import * as bcrypt from 'bcryptjs';
+import bcrypt from 'bcryptjs';
 
 const createUserSchema = z.object({
   email: z.string().email(),
