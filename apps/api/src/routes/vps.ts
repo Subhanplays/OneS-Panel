@@ -109,8 +109,10 @@ export async function vpsRoutes(app: FastifyInstance) {
     try {
       const { memory, cpu, disk, ownerId, osImage, useCustomImage } = request.body;
 
-      if (!memory || !cpu || !disk || !ownerId) {
-        return reply.status(400).send({ error: 'Memory, CPU, disk, and ownerId are required' });
+      const finalOwnerId = ownerId || request.user?.id;
+
+      if (!memory || !cpu || !disk) {
+        return reply.status(400).send({ error: 'Memory, CPU, and disk are required' });
       }
 
       if (memory < 1 || memory > 512) {
@@ -126,9 +128,9 @@ export async function vpsRoutes(app: FastifyInstance) {
       }
 
       const adapter = await getVPSAdapter();
-      const instance = await adapter.createVPS({ memory, cpu, disk, ownerId, osImage, useCustomImage });
+      const instance = await adapter.createVPS({ memory, cpu, disk, ownerId: finalOwnerId, osImage, useCustomImage });
 
-      await logAudit(request.user?.id, 'create', instance.vpsId, { memory, cpu, disk, ownerId }, request);
+      await logAudit(request.user?.id, 'create', instance.vpsId, { memory, cpu, disk, ownerId: finalOwnerId }, request);
 
       return { data: instance };
     } catch (error: any) {

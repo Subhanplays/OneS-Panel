@@ -53,6 +53,7 @@ export function VPSDeployBotPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [createForm, setCreateForm] = useState({ name: '', token: '', guildId: '' });
+  const [createError, setCreateError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchBots();
@@ -64,24 +65,19 @@ export function VPSDeployBotPage() {
       const botList = (response.data.data || []).filter((b: DiscordBot) => b.features.includes('vps-deploy'));
       setBots(botList);
 
-      // Fetch status for each bot
+      // Derive status from bot data
       for (const bot of botList) {
-        try {
-          const statusRes = await api.get(`/applications/${bot.applicationId}`);
-          if (statusRes.data) {
-            setBotStatuses(prev => ({
-              ...prev,
-              [bot.id]: {
-                status: statusRes.data.status,
-                uptime: statusRes.data.lastStartedAt ? Date.now() - new Date(statusRes.data.lastStartedAt).getTime() : 0,
-                cpu: statusRes.data.cpuUsage || 0,
-                ram: statusRes.data.ramUsage || 0,
-                disk: statusRes.data.diskUsage || 0,
-                lastHeartbeat: statusRes.data.updatedAt,
-              },
-            }));
-          }
-        } catch {}
+        setBotStatuses(prev => ({
+          ...prev,
+          [bot.id]: {
+            status: bot.enabled ? 'RUNNING' : 'STOPPED',
+            uptime: 0,
+            cpu: 0,
+            ram: 0,
+            disk: 0,
+            lastHeartbeat: bot.updatedAt,
+          },
+        }));
       }
     } catch (err) {
       console.error('Failed to fetch bots:', err);
@@ -90,10 +86,10 @@ export function VPSDeployBotPage() {
     }
   };
 
-  const handleAction = async (appId: string, action: string) => {
-    setActionLoading(appId);
+  const handleAction = async (botId: string, action: string) => {
+    setActionLoading(botId);
     try {
-      await api.post(`/applications/${appId}/${action}`);
+      await api.post(`/bots/${botId}/${action}`);
       await fetchBots();
     } catch (err) {
       console.error(`Failed to ${action}:`, err);
@@ -102,7 +98,7 @@ export function VPSDeployBotPage() {
     }
   };
 
-  const handleToggle = async (id: string, appId: string) => {
+  const handleToggle = async (id: string) => {
     setActionLoading(id);
     try {
       await api.post(`/bots/${id}/toggle`);
@@ -125,17 +121,28 @@ export function VPSDeployBotPage() {
   };
 
   const handleCreate = async () => {
+    setCreateError(null);
+    if (!createForm.name || !createForm.token) {
+      setCreateError('Bot name and token are required');
+      return;
+    }
     try {
-      await api.post('/bots', {
+      const res = await api.post('/bots', {
         name: createForm.name,
         token: createForm.token,
         guildId: createForm.guildId,
         features: ['vps-deploy'],
       });
+      if (res.data?.error) {
+        setCreateError(res.data.error);
+        return;
+      }
       setShowCreate(false);
       setCreateForm({ name: '', token: '', guildId: '' });
       await fetchBots();
-    } catch (err) {
+    } catch (err: any) {
+      const msg = err?.response?.data?.error || err?.message || 'Failed to create bot';
+      setCreateError(msg);
       console.error('Failed to create bot:', err);
     }
   };
@@ -168,7 +175,7 @@ export function VPSDeployBotPage() {
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
-          <Button onClick={() => setShowCreate(true)} size="sm">
+          <Button onClick={() => { setShowCreate(true); setCreateError(null); }} size="sm">
             <Plus className="h-4 w-4 mr-2" />
             Add Bot
           </Button>
@@ -269,33 +276,33 @@ export function VPSDeployBotPage() {
                   {/* Lifecycle Actions */}
                   <div className="flex flex-wrap gap-2">
                     {status?.status === 'NOT_INSTALLED' && (
-                      <Button size="sm" onClick={() => handleAction(bot.applicationId || '', 'install')} disabled={actionLoading === bot.id}>
+                      <Button size="sm" onClick={() => handleAction(bot.id, 'install')} disabled={actionLoading === bot.id}>
                         <Download className="h-4 w-4 mr-2" /> Install
                       </Button>
                     )}
                     {status?.status === 'STOPPED' && (
-                      <Button size="sm" onClick={() => handleAction(bot.applicationId || '', 'start')} disabled={actionLoading === bot.id}>
+                      <Button size="sm" onClick={() => handleAction(bot.id, 'start')} disabled={actionLoading === bot.id}>
                         <Play className="h-4 w-4 mr-2" /> Start
                       </Button>
                     )}
                     {status?.status === 'RUNNING' && (
                       <>
-                        <Button size="sm" variant="destructive" onClick={() => handleAction(bot.applicationId || '', 'stop')} disabled={actionLoading === bot.id}>
+                        <Button size="sm" variant="destructive" onClick={() => handleAction(bot.id, 'stop')} disabled={actionLoading === bot.id}>
                           <Square className="h-4 w-4 mr-2" /> Stop
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => handleAction(bot.applicationId || '', 'restart')} disabled={actionLoading === bot.id}>
+                        <Button size="sm" variant="outline" onClick={() => handleAction(bot.id, 'restart')} disabled={actionLoading === bot.id}>
                           <RotateCw className="h-4 w-4 mr-2" /> Restart
                         </Button>
                       </>
                     )}
                     {(status?.status === 'RUNNING' || status?.status === 'STOPPED') && (
-                      <Button size="sm" variant="outline" onClick={() => handleAction(bot.applicationId || '', 'update')} disabled={actionLoading === bot.id}>
+                      <Button size="sm" variant="outline" onClick={() => handleAction(bot.id, 'update')} disabled={actionLoading === bot.id}>
                         <ArrowUp className="h-4 w-4 mr-2" /> Update
                       </Button>
                     )}
                     {status?.status !== 'NOT_INSTALLED' && (
                       <>
-                        <Button size="sm" variant="ghost" onClick={() => handleAction(bot.applicationId || '', 'logs')}>
+                        <Button size="sm" variant="ghost" onClick={() => handleAction(bot.id, 'logs')}>
                           <FileText className="h-4 w-4 mr-2" /> Logs
                         </Button>
                         <Button size="sm" variant="ghost">
@@ -309,7 +316,7 @@ export function VPSDeployBotPage() {
                     <Button
                       size="sm"
                       variant={bot.enabled ? 'destructive' : 'default'}
-                      onClick={() => handleToggle(bot.id, bot.applicationId || '')}
+                      onClick={() => handleToggle(bot.id)}
                       disabled={actionLoading === bot.id}
                     >
                       {bot.enabled ? <PowerOff className="h-4 w-4 mr-2" /> : <Power className="h-4 w-4 mr-2" />}
@@ -322,7 +329,7 @@ export function VPSDeployBotPage() {
                         className="text-destructive"
                         onClick={() => {
                           if (confirm('Uninstall this bot? This cannot be undone.')) {
-                            handleAction(bot.applicationId || '', 'uninstall');
+                            handleAction(bot.id, 'uninstall');
                           }
                         }}
                         disabled={actionLoading === bot.id}
@@ -359,9 +366,14 @@ export function VPSDeployBotPage() {
                 <Input value={createForm.guildId} onChange={(e) => setCreateForm({ ...createForm, guildId: e.target.value })} className="mt-1" placeholder="Enter guild ID" />
               </div>
               <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
+                <Button variant="outline" onClick={() => { setShowCreate(false); setCreateError(null); }}>Cancel</Button>
                 <Button onClick={handleCreate}>Create Bot</Button>
               </div>
+              {createError && (
+                <div className="text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded px-3 py-2">
+                  {createError}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
