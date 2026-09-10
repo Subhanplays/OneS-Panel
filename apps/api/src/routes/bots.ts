@@ -1,10 +1,46 @@
 import { FastifyInstance } from 'fastify';
 import { prisma } from '@ones-panel/database';
-import { spawn, exec } from 'child_process';
+import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 
 const botProcesses = new Map<string, any>();
+
+function ensureInstalled(bot: { applicationId: string; name: string; features: string[] }) {
+  const installPath = `/opt/ones-panel/services/${bot.applicationId}`;
+  const mainFile = path.join(installPath, 'index.js');
+
+  if (fs.existsSync(mainFile)) return { installed: true, installPath };
+
+  fs.mkdirSync(installPath, { recursive: true });
+
+  if (!fs.existsSync(path.join(installPath, 'package.json'))) {
+    fs.writeFileSync(path.join(installPath, 'package.json'), JSON.stringify({
+      name: bot.name,
+      version: '1.0.0',
+      private: true,
+      main: 'index.js',
+      dependencies: { 'discord.js': '^14.0.0' },
+    }, null, 2));
+  }
+
+  fs.writeFileSync(mainFile, `const { Client, GatewayIntentBits } = require('discord.js');
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
+
+client.once('ready', () => {
+  console.log(\`\${process.env.BOT_NAME} is ready as \${client.user.tag}\`);
+});
+
+client.on('messageCreate', async (message) => {
+  if (message.content === '!ping') {
+    await message.reply('Pong!');
+  }
+});
+
+client.login(process.env.DISCORD_TOKEN);`);
+
+  return { installed: true, installPath, newlyCreated: true };
+}
 
 export async function botsRoutes(app: FastifyInstance) {
   // List all Discord bots
@@ -99,6 +135,40 @@ export async function botsRoutes(app: FastifyInstance) {
     return { success: true };
   });
 
+  // Get bot real-time status
+  app.get<{ Params: { id: string } }>('/:id/status', async (request, reply) => {
+    const { id } = request.params;
+
+    const bot = await prisma.discordBot.findUnique({ where: { id } });
+    if (!bot) {
+      return reply.status(404).send({ error: 'Bot not found' });
+    }
+
+    const installPath = `/opt/ones-panel/services/${bot.applicationId}`;
+    const mainFile = path.join(installPath, 'index.js');
+    const installed = fs.existsSync(mainFile);
+    const running = botProcesses.has(id);
+    const logFile = path.join(installPath, 'bot.log');
+    let lastLog = '';
+    if (fs.existsSync(logFile)) {
+      const content = fs.readFileSync(logFile, 'utf-8');
+      const lines = content.split('\n').filter(Boolean);
+      lastLog = lines.slice(-50).join('\n');
+    }
+
+    return {
+      data: {
+        installed,
+        running,
+        enabled: bot.enabled,
+        uptime: running ? Date.now() - ((botProcesses.get(id) as any)?.startTime || Date.now()) : 0,
+        cpu: 0,
+        ram: 0,
+        lastLog,
+      },
+    };
+  });
+
   // Toggle bot enabled/disabled
   app.post<{ Params: { id: string } }>('/:id/toggle', async (request, reply) => {
     const { id } = request.params;
@@ -132,12 +202,9 @@ export async function botsRoutes(app: FastifyInstance) {
       return { success: true, message: 'Bot already running' };
     }
 
-    const installPath = `/opt/ones-panel/services/${bot.applicationId}`;
+    const { installPath } = ensureInstalled(bot);
     const mainFile = path.join(installPath, 'index.js');
-
-    if (!fs.existsSync(mainFile)) {
-      return reply.status(400).send({ error: 'Bot not installed yet. Run install first.' });
-    }
+    const logFile = path.join(installPath, 'bot.log');
 
     const env = {
       ...process.env,
@@ -146,7 +213,11 @@ export async function botsRoutes(app: FastifyInstance) {
       BOT_NAME: bot.name,
     };
 
-    const child = spawn('node', [mainFile], { env, cwd: installPath, stdio: 'pipe' });
+    const child = spawn('node', [mainFile], { env, cwd: installPath, stdio: 'ignore' });
+    (child as any).startTime = Date.now();
+    const logStream = fs.createWriteStream(logFile, { flags: 'a' });
+    child.stdout?.pipe(logStream);
+    child.stderr?.pipe(logStream);
     botProcesses.set(id, child);
 
     child.on('exit', () => { botProcesses.delete(id); });
@@ -240,6 +311,7 @@ client.login(process.env.DISCORD_TOKEN);`);
 
     const installPath = `/opt/ones-panel/services/${bot.applicationId}`;
     const mainFile = path.join(installPath, 'index.js');
+    const logFile = path.join(installPath, 'bot.log');
 
     if (!fs.existsSync(mainFile)) {
       return reply.status(400).send({ error: 'Bot not installed' });
@@ -252,7 +324,10 @@ client.login(process.env.DISCORD_TOKEN);`);
       BOT_NAME: bot.name,
     };
 
-    const child = spawn('node', [mainFile], { env, cwd: installPath, stdio: 'pipe' });
+    const child = spawn('node', [mainFile], { env, cwd: installPath, stdio: 'ignore' });
+    const logStream = fs.createWriteStream(logFile, { flags: 'a' });
+    child.stdout?.pipe(logStream);
+    child.stderr?.pipe(logStream);
     botProcesses.set(id, child);
     child.on('exit', () => { botProcesses.delete(id); });
     child.on('error', () => { botProcesses.delete(id); });

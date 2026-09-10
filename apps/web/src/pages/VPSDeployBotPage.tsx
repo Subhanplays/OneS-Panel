@@ -65,19 +65,35 @@ export function VPSDeployBotPage() {
       const botList = (response.data.data || []).filter((b: DiscordBot) => b.features.includes('vps-deploy'));
       setBots(botList);
 
-      // Derive status from bot data
+      // Derive status from bot data and process state
       for (const bot of botList) {
-        setBotStatuses(prev => ({
-          ...prev,
-          [bot.id]: {
-            status: bot.enabled ? 'RUNNING' : 'STOPPED',
-            uptime: 0,
-            cpu: 0,
-            ram: 0,
-            disk: 0,
-            lastHeartbeat: bot.updatedAt,
-          },
-        }));
+        try {
+          const statusRes = await api.get(`/bots/${bot.id}/status`);
+          const s = statusRes.data?.data || {};
+          setBotStatuses(prev => ({
+            ...prev,
+            [bot.id]: {
+              status: s.installed ? (bot.enabled ? 'RUNNING' : 'STOPPED') : 'NOT_INSTALLED',
+              uptime: s.uptime || 0,
+              cpu: s.cpu || 0,
+              ram: s.ram || 0,
+              disk: 0,
+              lastHeartbeat: bot.updatedAt,
+            },
+          }));
+        } catch {
+          setBotStatuses(prev => ({
+            ...prev,
+            [bot.id]: {
+              status: bot.enabled ? 'RUNNING' : 'STOPPED',
+              uptime: 0,
+              cpu: 0,
+              ram: 0,
+              disk: 0,
+              lastHeartbeat: bot.updatedAt,
+            },
+          }));
+        }
       }
     } catch (err) {
       console.error('Failed to fetch bots:', err);
