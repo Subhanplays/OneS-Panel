@@ -16,6 +16,9 @@
     "lint": "pnpm -r run lint",
     "clean": "pnpm -r run clean"
   },
+  "prisma": {
+    "seed": "cd packages/database && npx ts-node src/seed.ts"
+  },
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
