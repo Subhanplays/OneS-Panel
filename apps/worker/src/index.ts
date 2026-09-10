@@ -1,4 +1,5 @@
-import 'dotenv/config';
+import * as dotenv from 'dotenv';
+dotenv.config();
 import { Queue, Worker, Job } from 'bullmq';
 import { prisma } from '@ones-panel/database';
 import { createAdapter, ServiceAdapter } from '@ones-panel/service-manager';

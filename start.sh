@@ -80,6 +80,9 @@ log "Installing pnpm dependencies..."
 pnpm install --frozen-lockfile 2>/dev/null || pnpm install
 
 # ---- Build ----
+log "Cleaning old builds..."
+rm -rf apps/api/dist apps/worker/dist apps/web/dist packages/shared/dist
+
 log "Building shared package..."
 pnpm --filter @ones-panel/shared build
 

@@ -1,4 +1,5 @@
-import 'dotenv/config';
+import * as dotenv from 'dotenv';
+dotenv.config();
 import './types';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
