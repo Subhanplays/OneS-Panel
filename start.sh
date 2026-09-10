@@ -95,9 +95,9 @@ cd "$DIR/packages/database" && npx prisma db push --skip-generate 2>/dev/null &&
 
 log "Seeding database..."
 (
-  set -a
-  [ -f "$DIR/.env" ] && source "$DIR/.env"
-  set +a
+  export DATABASE_URL="${DATABASE_URL:-postgresql://onespanel:onespanel_secret@localhost:5432/ones_panel}"
+  export REDIS_URL="${REDIS_URL:-redis://localhost:6379}"
+  [ -f "$DIR/.env" ] && set -a && source "$DIR/.env" && set +a
   cd "$DIR/packages/database"
   node dist/seed.js
 ) && log "Seed done" || warn "Seed skipped"
